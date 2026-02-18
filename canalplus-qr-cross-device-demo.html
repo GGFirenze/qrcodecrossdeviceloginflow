@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canal+ | Cross-Device QR Login — Amplitude Identity Resolution Demo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📺</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.amplitude.com/script/2fb1bcd80ccc92cbfecccc073cfe1245.js"></script>
+    <script>
+        window.amplitude.add(window.sessionReplay.plugin({sampleRate: 1}));
+        window.amplitude.init('2fb1bcd80ccc92cbfecccc073cfe1245', {
+            fetchRemoteConfig: true,
+            autocapture: {
+                pageViews: true,
+                attribution: true,
+                sessions: false,
+                formInteractions: false,
+                fileDownloads: false,
+                elementInteractions: false,
+                frustrationInteractions: true
+            }
+        });
+    </script>
+    <style>
+        :root {
+            --canal-black: #0a0a0a;
+            --canal-dark: #111111;
+            --canal-gray: #1a1a1a;
+            --canal-red: #e60000;
+            --canal-red-dark: #cc0000;
+            --amplitude-blue: #1a73e8;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666666;
+            --border-color: #2a2a2a;
+            --success-green: #22c55e;
+            --warning-orange: #f59e0b;
+            --error-red: #ef4444;
+            --code-bg: #0d1117;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--canal-black);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ─── TOP NAV ─── */
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: rgba(10,10,10,.92);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 100;
+            padding: 14px 0;
+        }
+        .nav-inner {
+            max-width: 1440px; margin: 0 auto; padding: 0 32px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .nav-left { display: flex; align-items: center; gap: 18px; }
+        .nav-logo { font-size: 22px; font-weight: 900; letter-spacing: -1px; }
+        .nav-logo span { color: var(--canal-red); }
+        .nav-divider { width: 1px; height: 22px; background: var(--border-color); }
+        .nav-title { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+        .nav-badge {
+            font-size: 11px; font-weight: 700;
+            background: var(--amplitude-blue); color: #fff;
+            padding: 4px 10px; border-radius: 20px;
+        }
+
+        /* ─── HERO ─── */
+        .hero {
+            padding: 120px 32px 48px;
+            text-align: center;
+            max-width: 900px; margin: 0 auto;
+        }
+        .hero-chip {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(230,0,0,.12); color: var(--canal-red);
+            font-size: 12px; font-weight: 700; padding: 6px 16px;
+            border-radius: 20px; border: 1px solid rgba(230,0,0,.25);
+            margin-bottom: 20px; text-transform: uppercase; letter-spacing: .5px;
+        }
+        .hero h1 {
+            font-size: 42px; font-weight: 900; letter-spacing: -1.5px;
+            line-height: 1.15; margin-bottom: 16px;
+        }
+        .hero h1 em { font-style: normal; color: var(--canal-red); }
+        .hero p {
+            font-size: 17px; color: var(--text-secondary);
+            max-width: 700px; margin: 0 auto 32px;
+        }
+
+        /* ─── PROBLEM CARD ─── */
+        .problem-section {
+            max-width: 1100px; margin: 0 auto 48px; padding: 0 32px;
+        }
+        .problem-card {
+            background: linear-gradient(135deg, #1a0000 0%, var(--canal-dark) 100%);
+            border: 1px solid rgba(230,0,0,.2);
+            border-radius: 16px; padding: 40px;
+        }
+        .problem-card h2 {
+            font-size: 22px; font-weight: 800; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .problem-card p { color: var(--text-secondary); font-size: 15px; margin-bottom: 20px; }
+        .problem-flow {
+            display: flex; align-items: center; justify-content: center;
+            gap: 12px; flex-wrap: wrap; margin-top: 16px;
+        }
+        .pf-step {
+            background: var(--canal-gray); border: 1px solid var(--border-color);
+            border-radius: 10px; padding: 14px 20px; text-align: center;
+            min-width: 140px;
+        }
+        .pf-step .pf-device { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+        .pf-step .pf-event { font-size: 14px; font-weight: 600; margin-top: 4px; }
+        .pf-step .pf-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--warning-orange); margin-top: 6px; }
+        .pf-arrow { font-size: 20px; color: var(--text-muted); }
+        .pf-break {
+            width: 100%; display: flex; justify-content: center;
+            padding: 8px 0; font-size: 13px; color: var(--error-red); font-weight: 700;
+        }
+
+        /* ─── CONTROLS ─── */
+        .controls-bar {
+            max-width: 1440px; margin: 0 auto; padding: 0 32px 24px;
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+        }
+        .btn {
+            padding: 12px 28px; border-radius: 8px; border: none;
+            font-family: inherit; font-size: 14px; font-weight: 700;
+            cursor: pointer; transition: all .2s;
+        }
+        .btn:disabled { opacity: .35; cursor: not-allowed; }
+        .btn-primary { background: var(--canal-red); color: #fff; }
+        .btn-primary:hover:not(:disabled) { background: var(--canal-red-dark); transform: translateY(-1px); }
+        .btn-outline { background: transparent; color: var(--text-secondary); border: 1px solid var(--border-color); }
+        .btn-outline:hover:not(:disabled) { border-color: #555; color: #fff; }
+        .step-indicator {
+            font-size: 13px; color: var(--text-muted); font-weight: 600;
+            padding: 0 16px;
+        }
+
+        /* ─── MAIN LAYOUT ─── */
+        .demo-container {
+            max-width: 1440px; margin: 0 auto; padding: 0 32px 48px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        /* ─── DEVICE FRAMES ─── */
+        .devices-row {
+            display: flex; gap: 24px;
+            grid-column: 1 / -1;
+        }
+        .device-wrapper { flex: 1; }
+        .device-label {
+            font-size: 12px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1px; color: var(--text-muted); margin-bottom: 10px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .device-label .dl-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted);
+        }
+        .device-label .dl-dot.active { background: var(--success-green); animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .4; }
+        }
+
+        /* TV */
+        .tv-frame {
+            background: #0d0d0d; border: 3px solid #333; border-radius: 14px;
+            aspect-ratio: 16/9; position: relative; overflow: hidden;
+            box-shadow: 0 0 60px rgba(0,0,0,.5);
+        }
+        .tv-stand {
+            width: 120px; height: 8px; background: #333; border-radius: 0 0 8px 8px;
+            margin: 0 auto;
+        }
+        .tv-screen {
+            width: 100%; height: 100%; display: flex;
+            flex-direction: column; align-items: center; justify-content: center;
+            padding: 32px; text-align: center; position: relative;
+            transition: opacity .6s;
+        }
+        .tv-screen.fade { opacity: 0; }
+
+        .tv-bg-art {
+            position: absolute; inset: 0; opacity: .06;
+            background: radial-gradient(ellipse at 30% 50%, var(--canal-red), transparent 60%),
+                        radial-gradient(ellipse at 70% 50%, var(--amplitude-blue), transparent 60%);
+        }
+
+        .tv-canal-logo { font-size: 28px; font-weight: 900; letter-spacing: -1px; margin-bottom: 6px; z-index: 1; }
+        .tv-canal-logo span { color: var(--canal-red); }
+
+        .tv-qr-box {
+            background: #fff; border-radius: 16px; padding: 20px;
+            display: inline-block; margin: 20px 0 16px; z-index: 1;
+            box-shadow: 0 8px 32px rgba(0,0,0,.4);
+        }
+        .tv-qr-canvas { width: 160px; height: 160px; display: block; }
+        .tv-instruction { font-size: 15px; color: var(--text-secondary); z-index: 1; }
+        .tv-instruction strong { color: #fff; }
+        .tv-flow-id {
+            margin-top: 12px; font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; color: var(--text-muted); z-index: 1;
+        }
+
+        .tv-welcome {
+            display: none; flex-direction: column; align-items: center;
+            justify-content: center; z-index: 1;
+        }
+        .tv-welcome .tw-avatar {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--canal-red), #ff6b6b);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; font-weight: 800; margin-bottom: 16px;
+        }
+        .tv-welcome h2 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+        .tv-welcome p { color: var(--text-secondary); font-size: 14px; }
+
+        .tv-content-grid {
+            display: none;
+            grid-template-columns: repeat(3, 1fr); gap: 12px;
+            width: 100%; margin-top: 24px; z-index: 1;
+        }
+        .tv-thumb {
+            aspect-ratio: 16/10; border-radius: 8px;
+            background: var(--canal-gray); position: relative; overflow: hidden;
+        }
+        .tv-thumb::after {
+            content: attr(data-title); position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 8px; font-size: 10px; font-weight: 600;
+            background: linear-gradient(transparent, rgba(0,0,0,.85));
+        }
+        .tv-thumb-img {
+            width: 100%; height: 100%; object-fit: cover;
+            background: linear-gradient(135deg, #222, #333);
+        }
+
+        /* Phone */
+        .phone-frame {
+            width: 260px; margin: 0 auto;
+            background: #111; border: 3px solid #333; border-radius: 32px;
+            padding: 12px; position: relative;
+            box-shadow: 0 0 60px rgba(0,0,0,.5);
+        }
+        .phone-notch {
+            width: 80px; height: 6px; background: #333; border-radius: 3px;
+            margin: 0 auto 10px;
+        }
+        .phone-screen {
+            background: #0a0a0a; border-radius: 20px;
+            min-height: 420px; overflow: hidden; position: relative;
+        }
+        .phone-view {
+            display: none; flex-direction: column; align-items: center;
+            justify-content: center; padding: 28px 20px; text-align: center;
+            min-height: 420px;
+        }
+        .phone-view.active { display: flex; }
+
+        .phone-idle-icon { font-size: 48px; margin-bottom: 12px; opacity: .4; }
+        .phone-idle-text { font-size: 13px; color: var(--text-muted); }
+
+        .phone-camera-ring {
+            width: 140px; height: 140px; border-radius: 50%;
+            border: 3px solid var(--canal-red); position: relative;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px;
+            animation: scan-pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes scan-pulse {
+            0%, 100% { border-color: var(--canal-red); box-shadow: 0 0 0 0 rgba(230,0,0,.3); }
+            50% { border-color: #ff4444; box-shadow: 0 0 0 12px rgba(230,0,0,0); }
+        }
+        .phone-camera-ring::after {
+            content: ''; width: 100px; height: 100px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(230,0,0,.15), transparent);
+        }
+
+        .phone-login-form { width: 100%; text-align: left; }
+        .phone-login-form h3 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+        .phone-login-form .plf-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; }
+        .phone-input {
+            width: 100%; padding: 12px 14px; background: var(--canal-gray);
+            border: 1px solid var(--border-color); border-radius: 8px;
+            color: #fff; font-family: inherit; font-size: 13px;
+            margin-bottom: 10px; outline: none;
+        }
+        .phone-input:focus { border-color: var(--canal-red); }
+        .phone-btn {
+            width: 100%; padding: 13px; border: none; border-radius: 8px;
+            background: var(--canal-red); color: #fff; font-family: inherit;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+            margin-top: 6px; transition: background .2s;
+        }
+        .phone-btn:hover { background: var(--canal-red-dark); }
+
+        .phone-success-check {
+            width: 72px; height: 72px; border-radius: 50%;
+            background: var(--success-green); display: flex;
+            align-items: center; justify-content: center;
+            font-size: 36px; margin-bottom: 16px;
+            animation: pop .4s cubic-bezier(.17,.67,.29,1.27);
+        }
+        @keyframes pop {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        .phone-home-bar {
+            width: 100px; height: 4px; background: #555; border-radius: 2px;
+            margin: 10px auto 4px;
+        }
+
+        /* ─── EVENT LOG ─── */
+        .log-panel {
+            grid-column: 1 / -1;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+        }
+
+        .panel-card {
+            background: var(--canal-dark); border: 1px solid var(--border-color);
+            border-radius: 14px; overflow: hidden;
+        }
+        .panel-header {
+            padding: 16px 20px; border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .panel-header h3 { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .panel-header .ph-count {
+            font-size: 11px; background: var(--canal-gray); padding: 2px 8px;
+            border-radius: 10px; color: var(--text-muted); font-weight: 600;
+        }
+        .panel-body { padding: 16px 20px; max-height: 420px; overflow-y: auto; }
+
+        .event-entry {
+            padding: 12px 14px; background: var(--canal-gray); border-radius: 10px;
+            margin-bottom: 8px; border-left: 3px solid var(--text-muted);
+            animation: slide-in .3s ease-out;
+            font-size: 13px;
+        }
+        @keyframes slide-in {
+            0% { opacity: 0; transform: translateY(-8px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .event-entry.tv { border-left-color: var(--amplitude-blue); }
+        .event-entry.phone { border-left-color: var(--canal-red); }
+        .event-entry.server { border-left-color: var(--success-green); }
+
+        .ee-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+        .ee-name { font-weight: 700; font-size: 13px; }
+        .ee-source {
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
+            padding: 2px 8px; border-radius: 4px; letter-spacing: .5px;
+        }
+        .ee-source.tv { background: rgba(26,115,232,.15); color: var(--amplitude-blue); }
+        .ee-source.phone { background: rgba(230,0,0,.12); color: var(--canal-red); }
+        .ee-source.server { background: rgba(34,197,94,.12); color: var(--success-green); }
+        .ee-props { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-secondary); line-height: 1.7; }
+        .ee-props .prop-key { color: var(--text-muted); }
+        .ee-props .prop-val { color: var(--warning-orange); }
+        .ee-props .prop-flow { color: #a78bfa; }
+
+        /* Identity table */
+        .id-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .id-table th {
+            text-align: left; padding: 8px 10px; font-weight: 700;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px;
+            font-size: 10px; border-bottom: 1px solid var(--border-color);
+        }
+        .id-table td {
+            padding: 10px; border-bottom: 1px solid var(--border-color);
+            font-family: 'JetBrains Mono', monospace; font-size: 11px;
+            color: var(--text-secondary);
+        }
+        .id-table td:first-child { font-family: 'Inter', sans-serif; font-weight: 600; color: #fff; font-size: 12px; }
+        .id-table .id-highlight { color: var(--warning-orange); font-weight: 600; }
+        .id-table .id-match { color: #a78bfa; font-weight: 600; }
+        .id-table .id-null { color: var(--text-muted); font-style: italic; }
+        .id-table .id-merged { color: var(--success-green); font-weight: 600; }
+        .id-table tr.new-row { animation: slide-in .3s ease-out; }
+
+        /* ─── FUNNEL SECTION ─── */
+        .funnel-section {
+            grid-column: 1 / -1;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+            margin-top: 12px;
+        }
+        .funnel-card {
+            background: var(--canal-dark); border: 1px solid var(--border-color);
+            border-radius: 14px; padding: 28px;
+        }
+        .funnel-card.broken { border-color: rgba(239,68,68,.3); }
+        .funnel-card.fixed { border-color: rgba(34,197,94,.3); }
+        .funnel-card h3 {
+            font-size: 16px; font-weight: 800; margin-bottom: 4px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .funnel-card .fc-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 24px; }
+
+        .funnel-step { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .fs-bar-track { flex: 1; height: 28px; background: var(--canal-gray); border-radius: 6px; overflow: hidden; position: relative; }
+        .fs-bar {
+            height: 100%; border-radius: 6px; transition: width 1s ease-out;
+            display: flex; align-items: center; padding-left: 10px;
+            font-size: 11px; font-weight: 700; min-width: 36px;
+        }
+        .fs-bar.red { background: linear-gradient(90deg, var(--canal-red), #ff4444); }
+        .fs-bar.green { background: linear-gradient(90deg, var(--success-green), #4ade80); color: #0a2e14; }
+        .fs-bar.blue { background: linear-gradient(90deg, var(--amplitude-blue), #60a5fa); }
+        .fs-label { font-size: 12px; font-weight: 600; min-width: 130px; }
+        .fs-pct { font-size: 12px; font-weight: 700; min-width: 42px; text-align: right; }
+
+        .funnel-verdict {
+            margin-top: 20px; padding: 14px 18px; border-radius: 10px;
+            font-size: 13px; font-weight: 600;
+        }
+        .funnel-verdict.bad { background: rgba(239,68,68,.1); color: var(--error-red); border: 1px solid rgba(239,68,68,.2); }
+        .funnel-verdict.good { background: rgba(34,197,94,.1); color: var(--success-green); border: 1px solid rgba(34,197,94,.2); }
+
+        /* ─── SOLUTION CALLOUT ─── */
+        .solution-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(26,115,232,.08), rgba(167,139,250,.08));
+            border: 1px solid rgba(26,115,232,.2);
+            border-radius: 14px; padding: 32px; margin-top: 12px;
+        }
+        .solution-section h3 { font-size: 18px; font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+        .solution-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .sol-card {
+            background: rgba(0,0,0,.3); border: 1px solid var(--border-color);
+            border-radius: 10px; padding: 20px;
+        }
+        .sol-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+        .sol-card p { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+        .sol-card code {
+            font-family: 'JetBrains Mono', monospace; font-size: 11px;
+            background: rgba(167,139,250,.12); color: #a78bfa;
+            padding: 1px 6px; border-radius: 4px;
+        }
+
+        /* ─── FOOTER ─── */
+        .demo-footer {
+            text-align: center; padding: 48px 32px;
+            color: var(--text-muted); font-size: 12px;
+            border-top: 1px solid var(--border-color); margin-top: 32px;
+        }
+        .demo-footer a { color: var(--amplitude-blue); text-decoration: none; }
+        .demo-footer a:hover { text-decoration: underline; }
+
+        /* ─── TOOLTIP ─── */
+        .tooltip {
+            display: none; position: fixed; z-index: 200;
+            background: #222; border: 1px solid #444; border-radius: 8px;
+            padding: 12px 16px; font-size: 12px; max-width: 320px;
+            box-shadow: 0 8px 24px rgba(0,0,0,.5);
+        }
+        .tooltip.show { display: block; }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .log-panel, .funnel-section { grid-template-columns: 1fr; }
+            .solution-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .devices-row { flex-direction: column; }
+            .hero h1 { font-size: 28px; }
+            .problem-flow { flex-direction: column; }
+            .pf-arrow { transform: rotate(90deg); }
+        }
+
+        /* Scanline effect on TV */
+        .tv-scanline {
+            position: absolute; inset: 0; z-index: 2; pointer-events: none;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.03) 2px, rgba(0,0,0,.03) 4px);
+        }
+
+        /* QR Code timer */
+        .qr-timer {
+            margin-top: 8px; font-size: 12px; color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace; z-index: 1;
+        }
+        .qr-timer span { color: var(--warning-orange); }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+    <div class="nav-inner">
+        <div class="nav-left">
+            <div class="nav-logo">CANAL<span>+</span></div>
+            <div class="nav-divider"></div>
+            <div class="nav-title">Cross-Device QR Login &mdash; Identity Resolution Demo</div>
+        </div>
+        <div class="nav-badge">Powered by Amplitude</div>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-chip">Identity Resolution</div>
+    <h1>How to track users across <em>QR&nbsp;code&nbsp;login</em> on TV</h1>
+    <p>When a subscriber scans a QR code on their TV with their phone to log in, the journey spans two devices. This demo shows exactly how Amplitude can stitch that path together.</p>
+</section>
+
+<!-- PROBLEM STATEMENT -->
+<section class="problem-section">
+    <div class="problem-card">
+        <h2>The Problem: Broken Funnels</h2>
+        <p>Without a shared identifier, Amplitude sees the TV and the phone as two unrelated anonymous users. The funnel from "QR Code Displayed" to "Login Completed" appears to have <strong>0% conversion</strong>.</p>
+        <div class="problem-flow">
+            <div class="pf-step">
+                <div class="pf-device">TV</div>
+                <div class="pf-event">QR Code Displayed</div>
+                <div class="pf-id">device: tv_abc123</div>
+            </div>
+            <div class="pf-arrow">&rarr;</div>
+            <div class="pf-step" style="border-color: var(--error-red);">
+                <div class="pf-device" style="color: var(--error-red);">Different Device</div>
+                <div class="pf-event" style="color: var(--error-red);">Identity Break</div>
+                <div class="pf-id" style="color: var(--error-red);">No shared ID</div>
+            </div>
+            <div class="pf-arrow">&rarr;</div>
+            <div class="pf-step">
+                <div class="pf-device">Phone</div>
+                <div class="pf-event">Login Completed</div>
+                <div class="pf-id">device: phone_xyz</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CONTROLS -->
+<div class="controls-bar">
+    <button class="btn btn-outline" id="btnReset" onclick="resetDemo()">Reset</button>
+    <span class="step-indicator" id="stepLabel">Step 0 / 6</span>
+    <button class="btn btn-primary" id="btnNext" onclick="advanceStep()">Start Demo &rarr;</button>
+</div>
+
+<!-- DEMO AREA -->
+<div class="demo-container">
+
+    <!-- ─── DEVICES ─── -->
+    <div class="devices-row">
+        <!-- TV -->
+        <div class="device-wrapper">
+            <div class="device-label">
+                <span class="dl-dot" id="tvDot"></span> TV &mdash; Samsung Smart TV (Salon)
+            </div>
+            <div class="tv-frame" id="tvFrame">
+                <div class="tv-bg-art"></div>
+                <div class="tv-scanline"></div>
+
+                <!-- QR Screen -->
+                <div class="tv-screen" id="tvQrScreen">
+                    <div class="tv-canal-logo">CANAL<span>+</span></div>
+                    <div style="font-size:14px; color: var(--text-secondary); z-index:1;">Connectez-vous pour continuer</div>
+                    <div class="tv-qr-box">
+                        <canvas class="tv-qr-canvas" id="qrCanvas"></canvas>
+                    </div>
+                    <div class="tv-instruction">Scannez le QR code avec votre <strong>téléphone</strong></div>
+                    <div class="tv-flow-id" id="tvFlowId"></div>
+                    <div class="qr-timer">Expire dans <span id="qrCountdown">5:00</span></div>
+                </div>
+
+                <!-- Welcome Screen -->
+                <div class="tv-screen tv-welcome" id="tvWelcomeScreen">
+                    <div class="tw-avatar">M</div>
+                    <h2>Bienvenue, Marie !</h2>
+                    <p>Votre TV est maintenant connectée</p>
+                    <div class="tv-content-grid" id="tvContentGrid">
+                        <div class="tv-thumb" data-title="Irma Vep"><div class="tv-thumb-img" style="background:linear-gradient(135deg,#2d1f3d,#1a1028);"></div></div>
+                        <div class="tv-thumb" data-title="Le Bureau"><div class="tv-thumb-img" style="background:linear-gradient(135deg,#1f2d3d,#0f1a28);"></div></div>
+                        <div class="tv-thumb" data-title="Validé"><div class="tv-thumb-img" style="background:linear-gradient(135deg,#3d2d1f,#281a0f);"></div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="tv-stand"></div>
+        </div>
+
+        <!-- Phone -->
+        <div class="device-wrapper" style="max-width: 300px;">
+            <div class="device-label">
+                <span class="dl-dot" id="phoneDot"></span> Phone &mdash; iPhone 15 (Marie)
+            </div>
+            <div class="phone-frame">
+                <div class="phone-notch"></div>
+                <div class="phone-screen">
+                    <!-- Idle -->
+                    <div class="phone-view active" id="phoneIdle">
+                        <div class="phone-idle-icon">📱</div>
+                        <div class="phone-idle-text">En attente d'action...</div>
+                    </div>
+                    <!-- Scanning -->
+                    <div class="phone-view" id="phoneScanning">
+                        <div class="phone-camera-ring"></div>
+                        <div style="font-size:14px; font-weight:700; margin-bottom:4px;">Scan en cours...</div>
+                        <div style="font-size:12px; color:var(--text-muted);">Détection du QR code</div>
+                    </div>
+                    <!-- Login Form -->
+                    <div class="phone-view" id="phoneLogin" style="justify-content: flex-start; padding-top: 36px;">
+                        <div class="phone-login-form">
+                            <div style="font-size:22px; font-weight:900; letter-spacing:-0.5px; margin-bottom:2px;">CANAL<span style='color:var(--canal-red);'>+</span></div>
+                            <h3>Connectez votre TV</h3>
+                            <div class="plf-sub">Entrez vos identifiants pour activer votre TV</div>
+                            <input class="phone-input" type="email" value="marie.dupont@email.fr" readonly>
+                            <input class="phone-input" type="password" value="••••••••••" readonly>
+                            <div style="font-size:11px; color:var(--text-muted); margin:4px 0 8px; display:flex; align-items:center; gap:6px;">
+                                <span style="color:var(--success-green);">&#10004;</span> QR Flow: <span style="color:#a78bfa; font-family:'JetBrains Mono',monospace;" id="phoneFlowId"></span>
+                            </div>
+                            <button class="phone-btn" id="phoneLoginBtn" onclick="advanceStep()">Se connecter &rarr;</button>
+                        </div>
+                    </div>
+                    <!-- Success -->
+                    <div class="phone-view" id="phoneSuccess">
+                        <div class="phone-success-check">&#10003;</div>
+                        <div style="font-size:16px; font-weight:800; margin-bottom:4px;">TV Connectée !</div>
+                        <div style="font-size:13px; color:var(--text-secondary);">Votre Samsung TV est maintenant liée à votre compte.</div>
+                    </div>
+                </div>
+                <div class="phone-home-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── LOG + IDENTITY PANELS ─── -->
+    <div class="log-panel">
+        <!-- Event Log -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <h3>Amplitude Event Log <span class="ph-count" id="eventCount">0 events</span></h3>
+            </div>
+            <div class="panel-body" id="eventLog">
+                <div style="text-align:center; padding:32px 0; color:var(--text-muted); font-size:13px;">
+                    Events will appear here as the demo progresses...
+                </div>
+            </div>
+        </div>
+
+        <!-- Identity Resolution Table -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <h3>Identity Resolution</h3>
+            </div>
+            <div class="panel-body">
+                <table class="id-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Device ID</th>
+                            <th>User ID</th>
+                            <th>Amp. ID</th>
+                            <th>Flow ID</th>
+                        </tr>
+                    </thead>
+                    <tbody id="idTableBody">
+                    </tbody>
+                </table>
+                <div id="idEmptyMsg" style="text-align:center; padding:32px 0; color:var(--text-muted); font-size:13px;">
+                    Identity mapping will populate here...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── FUNNEL COMPARISON ─── -->
+    <div class="funnel-section" id="funnelSection" style="display:none;">
+        <!-- Broken -->
+        <div class="funnel-card broken">
+            <h3 style="color:var(--error-red);">Without Identity Stitching</h3>
+            <div class="fc-sub">Standard Amplitude funnel grouped by User — cross-device journey is invisible</div>
+
+            <div class="funnel-step">
+                <div class="fs-label">QR Code Displayed</div>
+                <div class="fs-bar-track"><div class="fs-bar red" id="bBar1" style="width:0%">100%</div></div>
+                <div class="fs-pct">100%</div>
+            </div>
+            <div class="funnel-step">
+                <div class="fs-label">QR Code Scanned</div>
+                <div class="fs-bar-track"><div class="fs-bar red" id="bBar2" style="width:0%">0%</div></div>
+                <div class="fs-pct" style="color:var(--error-red);">0%</div>
+            </div>
+            <div class="funnel-step">
+                <div class="fs-label">Login Completed</div>
+                <div class="fs-bar-track"><div class="fs-bar red" id="bBar3" style="width:0%">0%</div></div>
+                <div class="fs-pct" style="color:var(--error-red);">0%</div>
+            </div>
+            <div class="funnel-step">
+                <div class="fs-label">TV Activated</div>
+                <div class="fs-bar-track"><div class="fs-bar red" id="bBar4" style="width:0%">0%</div></div>
+                <div class="fs-pct" style="color:var(--error-red);">0%</div>
+            </div>
+
+            <div class="funnel-verdict bad">
+                Amplitude sees 2 separate anonymous users. The TV user "drops off" instantly.
+                The phone user appears from nowhere. Conversion = 0%.
+            </div>
+        </div>
+
+        <!-- Fixed -->
+        <div class="funnel-card fixed">
+            <h3 style="color:var(--success-green);">With <code style="font-family:'JetBrains Mono'; background:rgba(34,197,94,.12); color:var(--success-green); padding:2px 8px; border-radius:4px;">qr_login_flow_id</code></h3>
+            <div class="fc-sub">Funnel grouped by shared flow ID — full journey is visible and stitched</div>
+
+            <div class="funnel-step">
+                <div class="fs-label">QR Code Displayed</div>
+                <div class="fs-bar-track"><div class="fs-bar green" id="gBar1" style="width:0%">100%</div></div>
+                <div class="fs-pct">100%</div>
+            </div>
+            <div class="funnel-step">
+                <div class="fs-label">QR Code Scanned</div>
+                <div class="fs-bar-track"><div class="fs-bar green" id="gBar2" style="width:0%">92%</div></div>
+                <div class="fs-pct">92%</div>
+            </div>
+            <div class="funnel-step">
+                <div class="fs-label">Login Completed</div>
+                <div class="fs-bar-track"><div class="fs-bar green" id="gBar3" style="width:0%">87%</div></div>
+                <div class="fs-pct">87%</div>
+            </div>
+            <div class="funnel-step">
+                <div class="fs-label">TV Activated</div>
+                <div class="fs-bar-track"><div class="fs-bar green" id="gBar4" style="width:0%">85%</div></div>
+                <div class="fs-pct">85%</div>
+            </div>
+
+            <div class="funnel-verdict good">
+                By grouping on <code style="font-family:'JetBrains Mono';">qr_login_flow_id</code>, the cross-device
+                journey becomes a single continuous funnel. True conversion = 85%.
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── SOLUTION SUMMARY ─── -->
+    <div class="solution-section" id="solutionSection" style="display:none;">
+        <h3>How It Works</h3>
+        <div class="solution-grid">
+            <div class="sol-card">
+                <h4>1. Shared Flow ID</h4>
+                <p>The TV generates a <code>qr_login_flow_id</code> (UUID) and embeds it in the QR code URL. Every event on both devices includes this ID, creating a cross-device thread.</p>
+            </div>
+            <div class="sol-card">
+                <h4>2. Server-Side Stitching</h4>
+                <p>After login, the backend sends a <code>QR Login Completed</code> event attributed to the <strong>TV's device_id</strong> with the authenticated <code>user_id</code>. This closes the loop.</p>
+            </div>
+            <div class="sol-card">
+                <h4>3. User ID Merge</h4>
+                <p>Once <code>setUserId()</code> is called on both devices, Amplitude's identity resolution merges both Device IDs under one Amplitude ID. Future events are unified.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="demo-footer">
+    <p style="margin-bottom:6px;">
+        <strong>Canal+ &times; Amplitude</strong> &mdash; Cross-Device Identity Resolution Prototype
+    </p>
+    <p>
+        Based on <a href="https://amplitude.com/docs/data/sources/instrument-track-unique-users" target="_blank">Amplitude's Identity Resolution documentation</a>.
+        For implementation details, see the companion guide: <em>Cross-Device-QR-Login-Identity-Resolution-Guide.md</em>
+    </p>
+</footer>
+
+<script>
+// ─── RANDOM USER POOL ───
+const USER_POOL = [
+    { first: 'Marie',    last: 'Dupont',   email: 'marie.dupont@email.fr',    initial: 'M' },
+    { first: 'Thomas',   last: 'Bernard',  email: 'thomas.bernard@email.fr',  initial: 'T' },
+    { first: 'Camille',  last: 'Moreau',   email: 'camille.moreau@email.fr',  initial: 'C' },
+    { first: 'Lucas',    last: 'Lefèvre',  email: 'lucas.lefevre@email.fr',   initial: 'L' },
+    { first: 'Léa',      last: 'Martin',   email: 'lea.martin@email.fr',      initial: 'L' },
+    { first: 'Hugo',     last: 'Petit',    email: 'hugo.petit@email.fr',      initial: 'H' },
+    { first: 'Chloé',    last: 'Durand',   email: 'chloe.durand@email.fr',    initial: 'C' },
+    { first: 'Antoine',  last: 'Leroy',    email: 'antoine.leroy@email.fr',   initial: 'A' },
+    { first: 'Emma',     last: 'Roux',     email: 'emma.roux@email.fr',       initial: 'E' },
+    { first: 'Julien',   last: 'Fournier', email: 'julien.fournier@email.fr', initial: 'J' },
+    { first: 'Inès',     last: 'Simon',    email: 'ines.simon@email.fr',      initial: 'I' },
+    { first: 'Nathan',   last: 'Laurent',  email: 'nathan.laurent@email.fr',  initial: 'N' },
+];
+
+function randomHex(len) { return Array.from({ length: len }, () => Math.floor(Math.random() * 16).toString(16)).join(''); }
+const currentUser = USER_POOL[Math.floor(Math.random() * USER_POOL.length)];
+
+// ─── DEMO STATE ───
+let currentStep = 0;
+const totalSteps = 6;
+let eventEntries = [];
+const FLOW_ID = randomHex(8) + '-' + randomHex(4);
+const TV_DEVICE_ID = 'tv_samsung_' + randomHex(5);
+const PHONE_DEVICE_ID = 'iph_15_' + randomHex(5);
+const USER_ID = 'usr_' + currentUser.first.toLowerCase() + '_' + randomHex(4);
+let TV_AMP_ID = String(10000000 + Math.floor(Math.random() * 9000000));
+let PHONE_AMP_ID = String(10000000 + Math.floor(Math.random() * 9000000));
+
+// ─── QR CODE GENERATOR (simple deterministic pattern) ───
+function drawQRCode(canvas) {
+    const ctx = canvas.getContext('2d');
+    const size = 160;
+    canvas.width = size;
+    canvas.height = size;
+    const cellSize = 5;
+    const grid = size / cellSize;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#000000';
+
+    // Finder patterns
+    function drawFinder(x, y) {
+        for (let r = 0; r < 7; r++) {
+            for (let c = 0; c < 7; c++) {
+                if (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4)) {
+                    ctx.fillRect((x + c) * cellSize, (y + r) * cellSize, cellSize, cellSize);
+                }
+            }
+        }
+    }
+    drawFinder(0, 0);
+    drawFinder(grid - 7, 0);
+    drawFinder(0, grid - 7);
+
+    // Pseudo-random data modules (seeded for consistency)
+    let seed = 42;
+    function rand() { seed = (seed * 16807 + 0) % 2147483647; return seed / 2147483647; }
+    for (let r = 0; r < grid; r++) {
+        for (let c = 0; c < grid; c++) {
+            if ((r < 9 && c < 9) || (r < 9 && c > grid - 9) || (r > grid - 9 && c < 9)) continue;
+            if (rand() > 0.55) {
+                ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+            }
+        }
+    }
+
+    // Canal+ red accent in center
+    ctx.fillStyle = '#e60000';
+    const cx = Math.floor(grid / 2) - 2;
+    const cy = Math.floor(grid / 2) - 2;
+    for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 5; c++) {
+            if (r === 0 || r === 4 || c === 0 || c === 4 || (r === 2 && c === 2)) {
+                ctx.fillRect((cx + c) * cellSize, (cy + r) * cellSize, cellSize, cellSize);
+            }
+        }
+    }
+}
+
+// ─── EVENT LOG HELPERS ───
+function addEvent(name, source, properties) {
+    const logEl = document.getElementById('eventLog');
+    if (eventEntries.length === 0) logEl.innerHTML = '';
+
+    const entry = document.createElement('div');
+    entry.className = `event-entry ${source}`;
+
+    let propsHtml = Object.entries(properties).map(([k, v]) => {
+        const valClass = k.includes('flow_id') ? 'prop-flow' : 'prop-val';
+        return `<span class="prop-key">${k}:</span> <span class="${valClass}">${v}</span>`;
+    }).join('<br>');
+
+    entry.innerHTML = `
+        <div class="ee-top">
+            <span class="ee-name">${name}</span>
+            <span class="ee-source ${source}">${source}</span>
+        </div>
+        <div class="ee-props">${propsHtml}</div>
+    `;
+
+    logEl.prepend(entry);
+    eventEntries.push({ name, source, properties });
+    document.getElementById('eventCount').textContent = `${eventEntries.length} events`;
+}
+
+function addIdRow(event, deviceId, userId, ampId, flowId, options = {}) {
+    document.getElementById('idEmptyMsg').style.display = 'none';
+    const tbody = document.getElementById('idTableBody');
+    const tr = document.createElement('tr');
+    tr.className = 'new-row';
+
+    const uid = userId || '<span class="id-null">null</span>';
+    const fid = flowId ? `<span class="id-match">${flowId}</span>` : '<span class="id-null">—</span>';
+    const ampClass = options.merged ? 'id-merged' : 'id-highlight';
+
+    tr.innerHTML = `
+        <td>${event}</td>
+        <td>${deviceId}</td>
+        <td>${uid}</td>
+        <td class="${ampClass}">${ampId}</td>
+        <td>${fid}</td>
+    `;
+    tbody.appendChild(tr);
+}
+
+// ─── PHONE VIEW SWITCHER ───
+function showPhoneView(viewId) {
+    document.querySelectorAll('.phone-view').forEach(v => v.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+}
+
+// ─── STEP LOGIC ───
+function advanceStep() {
+    if (currentStep >= totalSteps) return;
+    currentStep++;
+    updateStepUI();
+
+    switch (currentStep) {
+        case 1: stepQRDisplayed(); break;
+        case 2: stepQRScanned(); break;
+        case 3: stepLoginForm(); break;
+        case 4: stepLoginCompleted(); break;
+        case 5: stepServerStitch(); break;
+        case 6: stepTVActivated(); break;
+    }
+}
+
+function updateStepUI() {
+    document.getElementById('stepLabel').textContent = `Step ${currentStep} / ${totalSteps}`;
+    const btn = document.getElementById('btnNext');
+    if (currentStep >= totalSteps) {
+        btn.textContent = 'Demo Complete';
+        btn.disabled = true;
+    } else if (currentStep === 3) {
+        btn.style.display = 'none';
+    } else {
+        btn.textContent = 'Next Step →';
+        btn.style.display = '';
+    }
+}
+
+// Step 1: TV shows QR code
+function stepQRDisplayed() {
+    document.getElementById('tvDot').classList.add('active');
+    document.getElementById('tvFlowId').textContent = `flow_id: ${FLOW_ID}`;
+    document.getElementById('phoneFlowId').textContent = FLOW_ID;
+
+    const props = {
+        qr_login_flow_id: FLOW_ID,
+        device_type: 'tv',
+        tv_device_id: TV_DEVICE_ID,
+        tv_model: 'Samsung Smart TV'
+    };
+    window.amplitude.track('QR Code Displayed', props);
+    addEvent('QR Code Displayed', 'tv', props);
+    addIdRow('QR Displayed', TV_DEVICE_ID, null, TV_AMP_ID, FLOW_ID);
+}
+
+// Step 2: Phone scans QR
+function stepQRScanned() {
+    document.getElementById('phoneDot').classList.add('active');
+    showPhoneView('phoneScanning');
+
+    const props = {
+        qr_login_flow_id: FLOW_ID,
+        device_type: 'mobile',
+        tv_device_id: TV_DEVICE_ID,
+        scan_method: 'camera'
+    };
+    window.amplitude.track('QR Code Scanned', props);
+    addEvent('QR Code Scanned', 'phone', props);
+    addIdRow('QR Scanned', PHONE_DEVICE_ID, null, PHONE_AMP_ID, FLOW_ID);
+}
+
+// Step 3: Login form shown
+function stepLoginForm() {
+    showPhoneView('phoneLogin');
+    document.getElementById('btnNext').style.display = 'none';
+
+    const props = {
+        qr_login_flow_id: FLOW_ID,
+        device_type: 'mobile',
+        login_method: 'qr_code'
+    };
+    window.amplitude.track('Login Started', props);
+    addEvent('Login Started', 'phone', props);
+    addIdRow('Login Started', PHONE_DEVICE_ID, null, PHONE_AMP_ID, FLOW_ID);
+}
+
+// Step 4: Login completed on phone
+function stepLoginCompleted() {
+    document.getElementById('btnNext').style.display = '';
+    showPhoneView('phoneSuccess');
+
+    window.amplitude.setUserId(USER_ID);
+
+    const props = {
+        qr_login_flow_id: FLOW_ID,
+        device_type: 'mobile',
+        tv_device_id: TV_DEVICE_ID,
+        login_method: 'qr_code',
+        user_id: USER_ID
+    };
+    window.amplitude.track('Login Completed', props);
+    addEvent('Login Completed', 'phone', props);
+    addIdRow('Login Completed', PHONE_DEVICE_ID, `<span class="id-merged">${USER_ID}</span>`, PHONE_AMP_ID, FLOW_ID);
+}
+
+// Step 5: Server-side stitching event
+function stepServerStitch() {
+    const props = {
+        qr_login_flow_id: FLOW_ID,
+        user_id: USER_ID,
+        device_id: TV_DEVICE_ID,
+        phone_device_id: PHONE_DEVICE_ID,
+        login_method: 'qr_code'
+    };
+    window.amplitude.track('QR Login Completed', props);
+    addEvent('QR Login Completed', 'server', {
+        ...props,
+        device_id: TV_DEVICE_ID + ' (attributed to TV)'
+    });
+    addIdRow('QR Login Completed (server)', TV_DEVICE_ID, `<span class="id-merged">${USER_ID}</span>`, `<span class="id-merged">${TV_AMP_ID} ← merged</span>`, FLOW_ID, { merged: true });
+}
+
+// Step 6: TV activates
+function stepTVActivated() {
+    const tvQr = document.getElementById('tvQrScreen');
+    const tvWelcome = document.getElementById('tvWelcomeScreen');
+    const tvContent = document.getElementById('tvContentGrid');
+
+    tvQr.classList.add('fade');
+    setTimeout(() => {
+        tvQr.style.display = 'none';
+        tvWelcome.style.display = 'flex';
+        setTimeout(() => { tvContent.style.display = 'grid'; }, 400);
+    }, 500);
+
+    const props = {
+        qr_login_flow_id: FLOW_ID,
+        device_type: 'tv',
+        activation_method: 'qr_code',
+        user_id: USER_ID
+    };
+    window.amplitude.track('TV Activated', props);
+    addEvent('TV Activated', 'tv', props);
+
+    addIdRow('TV Activated', TV_DEVICE_ID, `<span class="id-merged">${USER_ID}</span>`, `<span class="id-merged">${TV_AMP_ID}</span>`, FLOW_ID, { merged: true });
+
+    // Show funnel comparison
+    setTimeout(showFunnels, 600);
+}
+
+// ─── FUNNEL ANIMATION ───
+function showFunnels() {
+    const funnelEl = document.getElementById('funnelSection');
+    const solutionEl = document.getElementById('solutionSection');
+    funnelEl.style.display = '';
+    solutionEl.style.display = '';
+
+    funnelEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    setTimeout(() => {
+        // Broken funnel
+        document.getElementById('bBar1').style.width = '100%';
+        document.getElementById('bBar2').style.width = '4%';
+        document.getElementById('bBar3').style.width = '4%';
+        document.getElementById('bBar4').style.width = '4%';
+        // Fixed funnel
+        document.getElementById('gBar1').style.width = '100%';
+        document.getElementById('gBar2').style.width = '92%';
+        document.getElementById('gBar3').style.width = '87%';
+        document.getElementById('gBar4').style.width = '85%';
+    }, 200);
+}
+
+// ─── RESET ───
+function resetDemo() {
+    window.amplitude.reset();
+    currentStep = 0;
+    eventEntries = [];
+
+    document.getElementById('stepLabel').textContent = 'Step 0 / 6';
+    const btn = document.getElementById('btnNext');
+    btn.textContent = 'Start Demo →';
+    btn.disabled = false;
+    btn.style.display = '';
+
+    document.getElementById('eventLog').innerHTML = '<div style="text-align:center; padding:32px 0; color:var(--text-muted); font-size:13px;">Events will appear here as the demo progresses...</div>';
+    document.getElementById('eventCount').textContent = '0 events';
+    document.getElementById('idTableBody').innerHTML = '';
+    document.getElementById('idEmptyMsg').style.display = '';
+
+    document.getElementById('tvDot').classList.remove('active');
+    document.getElementById('phoneDot').classList.remove('active');
+
+    document.getElementById('tvQrScreen').style.display = '';
+    document.getElementById('tvQrScreen').classList.remove('fade');
+    document.getElementById('tvWelcomeScreen').style.display = 'none';
+    document.getElementById('tvContentGrid').style.display = 'none';
+
+    showPhoneView('phoneIdle');
+
+    document.getElementById('funnelSection').style.display = 'none';
+    document.getElementById('solutionSection').style.display = 'none';
+
+    // Reset funnel bars
+    ['bBar1','bBar2','bBar3','bBar4','gBar1','gBar2','gBar3','gBar4'].forEach(id => {
+        document.getElementById(id).style.width = '0%';
+    });
+
+    document.getElementById('tvFlowId').textContent = '';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── INIT ───
+document.addEventListener('DOMContentLoaded', () => {
+    drawQRCode(document.getElementById('qrCanvas'));
+
+    // Populate UI with the randomized user
+    document.querySelector('.tw-avatar').textContent = currentUser.initial;
+    document.querySelector('.tv-welcome h2').textContent = `Bienvenue, ${currentUser.first} !`;
+    document.querySelector('.phone-input[type="email"]').value = currentUser.email;
+    document.querySelector('.device-label #phoneDot').parentElement.innerHTML =
+        `<span class="dl-dot" id="phoneDot"></span> Phone — iPhone 15 (${currentUser.first})`;
+});
+</script>
+
+</body>
+</html>
