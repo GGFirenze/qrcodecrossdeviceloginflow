@@ -801,11 +801,22 @@ let currentStep = 0;
 const totalSteps = 6;
 let eventEntries = [];
 const FLOW_ID = randomHex(8) + '-' + randomHex(4);
-const TV_DEVICE_ID = 'tv_samsung_' + randomHex(5);
-const PHONE_DEVICE_ID = 'iph_15_' + randomHex(5);
+const TV_DEVICE_ID = 'tv_' + randomHex(8) + '-' + randomHex(4);
+const PHONE_DEVICE_ID = 'ph_' + randomHex(8) + '-' + randomHex(4);
 const USER_ID = 'usr_' + currentUser.first.toLowerCase() + '_' + randomHex(4);
 let TV_AMP_ID = String(10000000 + Math.floor(Math.random() * 9000000));
 let PHONE_AMP_ID = String(10000000 + Math.floor(Math.random() * 9000000));
+let ORIGINAL_DEVICE_ID = null;
+
+function setDeviceTo(targetDeviceId) {
+    window.amplitude.setDeviceId(targetDeviceId);
+}
+
+function restoreOriginalDevice() {
+    if (ORIGINAL_DEVICE_ID) {
+        window.amplitude.setDeviceId(ORIGINAL_DEVICE_ID);
+    }
+}
 
 // ─── QR CODE GENERATOR (simple deterministic pattern) ───
 function drawQRCode(canvas) {
@@ -943,10 +954,14 @@ function updateStepUI() {
 
 // Step 1: TV shows QR code
 function stepQRDisplayed() {
+    if (!ORIGINAL_DEVICE_ID) {
+        ORIGINAL_DEVICE_ID = window.amplitude.getDeviceId();
+    }
     document.getElementById('tvDot').classList.add('active');
     document.getElementById('tvFlowId').textContent = `flow_id: ${FLOW_ID}`;
     document.getElementById('phoneFlowId').textContent = FLOW_ID;
 
+    setDeviceTo(TV_DEVICE_ID);
     const props = {
         qr_login_flow_id: FLOW_ID,
         device_type: 'tv',
@@ -963,6 +978,7 @@ function stepQRScanned() {
     document.getElementById('phoneDot').classList.add('active');
     showPhoneView('phoneScanning');
 
+    setDeviceTo(PHONE_DEVICE_ID);
     const props = {
         qr_login_flow_id: FLOW_ID,
         device_type: 'mobile',
@@ -979,6 +995,7 @@ function stepLoginForm() {
     showPhoneView('phoneLogin');
     document.getElementById('btnNext').style.display = 'none';
 
+    setDeviceTo(PHONE_DEVICE_ID);
     const props = {
         qr_login_flow_id: FLOW_ID,
         device_type: 'mobile',
@@ -994,6 +1011,7 @@ function stepLoginCompleted() {
     document.getElementById('btnNext').style.display = '';
     showPhoneView('phoneSuccess');
 
+    setDeviceTo(PHONE_DEVICE_ID);
     window.amplitude.setUserId(USER_ID);
 
     const props = {
@@ -1008,19 +1026,19 @@ function stepLoginCompleted() {
     addIdRow('Login Completed', PHONE_DEVICE_ID, `<span class="id-merged">${USER_ID}</span>`, PHONE_AMP_ID, FLOW_ID);
 }
 
-// Step 5: Server-side stitching event
+// Step 5: Server-side stitching — attributed to TV device with user_id
 function stepServerStitch() {
+    setDeviceTo(TV_DEVICE_ID);
     const props = {
         qr_login_flow_id: FLOW_ID,
-        user_id: USER_ID,
-        device_id: TV_DEVICE_ID,
         phone_device_id: PHONE_DEVICE_ID,
         login_method: 'qr_code'
     };
     window.amplitude.track('QR Login Completed', props);
     addEvent('QR Login Completed', 'server', {
         ...props,
-        device_id: TV_DEVICE_ID + ' (attributed to TV)'
+        device_id: TV_DEVICE_ID + ' (attributed to TV)',
+        user_id: USER_ID
     });
     addIdRow('QR Login Completed (server)', TV_DEVICE_ID, `<span class="id-merged">${USER_ID}</span>`, `<span class="id-merged">${TV_AMP_ID} ← merged</span>`, FLOW_ID, { merged: true });
 }
@@ -1038,6 +1056,7 @@ function stepTVActivated() {
         setTimeout(() => { tvContent.style.display = 'grid'; }, 400);
     }, 500);
 
+    setDeviceTo(TV_DEVICE_ID);
     const props = {
         qr_login_flow_id: FLOW_ID,
         device_type: 'tv',
@@ -1078,6 +1097,7 @@ function showFunnels() {
 
 // ─── RESET ───
 function resetDemo() {
+    restoreOriginalDevice();
     window.amplitude.reset();
     currentStep = 0;
     eventEntries = [];
